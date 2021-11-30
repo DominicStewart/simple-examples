@@ -1,0 +1,82 @@
+<html>
+	  <head>
+		<title>Daily.co Call Object Demo</title>
+		<script src="https://unpkg.com/@daily-co/daily-js"></script>
+	  </head>
+	  <body onload="main()">
+		  <div id="controls">
+			  <button id="join" onclick="joinRoom()">Join Room</button>
+			  <button id="leave" onclick="leaveRoom()">Leave Room</button>
+		  </div>
+      <div id="videos"></div>
+      <div id="audios"></div>
+      </div>
+		  <script>
+  			async function main() {
+  				// Change this to your own room URL
+                const ROOM_URL = "https://bdom.daily.co/test";
+
+
+  				window.call = DailyIframe.createCallObject({
+            url: ROOM_URL,
+            subscribeToTracksAutomatically: true,
+            dailyConfig: {
+              experimentalChromeVideoMuteLightOff: true,
+            },
+          });
+          
+          // Higher quality camera feed
+          /*callObject.setBandwidth({
+            trackConstraints: {
+              width: { min: 1920, max: 1920, ideal: 1920 },
+              height: { min: 1080, max: 1080, ideal: 1080 },
+              maxFramerate: 30
+            }
+          }); */
+  
+          call.on("track-started", startTrack);
+          call.on("track-stopped", stopTrack);
+  			}
+        	  	
+  			function startTrack(evt) {
+  				console.log("track started: ", evt);
+  				if (evt.track.kind === "audio") {
+  				  let audiosDiv = document.getElementById("audios");
+  				let audioEl = document.createElement("audio");
+  				audiosDiv.appendChild(audioEl);
+  				audioEl.style.width = "100%";
+  				audioEl.srcObject = new MediaStream([evt.track]);
+  				audioEl.play();
+  				} else if (evt.track.kind === "video") {
+            let videosDiv = document.getElementById("videos");
+  				let videoEl = document.createElement("video");
+  				videosDiv.appendChild(videoEl);
+  				videoEl.style.width = "100%";
+  				videoEl.srcObject = new MediaStream([evt.track]);
+  				videoEl.play();
+          }
+
+  		  }
+  		
+  		  function stopTrack(evt) {
+  				let vids = document.getElementsByTagName("video");
+  				for (let vid of vids) {
+  				  if (vid.srcObject && vid.srcObject.getVideoTracks()[0] === evt.track) {
+  					vid.remove()
+  				  }
+  				}
+  		  }
+        
+  			async function joinRoom() {
+  				await call.join({})
+  			}
+  			  
+  			async function leaveRoom() {
+          let vids = document.getElementsByTagName("video")
+          for (let vid of vids) { vid.remove() }
+  				await call.leave()
+  			}
+		  </script>
+	  </body>
+	</html>
+	
